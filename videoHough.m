@@ -5,7 +5,7 @@
 
 close all
 
-v = VideoReader('pb_climb_test.mp4'); %Reads input from a given file
+v = VideoReader('pb_climb_test_short.mp4'); %Reads input from a given file
 out = VideoWriter('full.avi', 'Motion JPEG AVI') %line detection video outputs to this file
 w = 4000
 out.FrameRate = 4;
@@ -44,27 +44,29 @@ while hasFrame(v)
         rho = lines(k).rho;
         len = norm(lines(k).point1 - lines(k).point2);
         
-        [inter] = lineIntersect(xy, xy_long, w);
+%         [inter] = lineIntersect(xy, xy_long, 0, 1000);
+%         
+%         if(true)
+%             continue
+%         end
         
-        if(true)
-            
-        end
-        
-        %Ensures the difference in angle between frames is not drastic, and
-        %the lines do not intersect
-        if (len > max_len && (theta_prev == 400 ||abs(th-theta_prev) < 30)&& inter == false)
-            max_len2 = max_len;
+        %Finds the two longest lines
+        if (len > max_len)
+            if max_len2 ~= 0
+                max_len2 = max_len;
+                xy_long2 = xy_long;
+                this_theta_2 = this_theta;
+            end
             max_len = len;
             xy_long = xy;
             max_rho = rho;
             this_theta = th;
         end
-        if (len > max_len2 && (theta_prev == 400 ||abs(th-theta_prev) < 30)&& inter == false)
+        if (len > max_len2 && len < max_len)
             max_len2 = len;
             xy_long2 = xy;
             this_theta_2 = th;
         end
-        
         
     end
     
@@ -85,8 +87,11 @@ while hasFrame(v)
     longest = [xy_long(1), xy_long(2), xy_long(3), xy_long(4)];
     RGB = insertShape(RGB, 'Line', {longest}, 'Color', {'red'}, 'LineWidth',5);
     
-    longest = [xy_long2(1), xy_long2(2), xy_long2(3), xy_long2(4)];
-    RGB = insertShape(RGB, 'Line', {longest}, 'Color', {'red'}, 'LineWidth',5);
+    longest2 = [xy_long2(1), xy_long2(2), xy_long2(3), xy_long2(4)];
+    RGB = insertShape(RGB, 'Line', {longest2}, 'Color', {'red'}, 'LineWidth',5);
+    
+    middle = (longest+longest2)./2;
+    RGB = insertShape(RGB, 'Line', {middle}, 'Color', {'cyan'}, 'LineWidth',5);
     
     writeVideo(out,RGB);
     
